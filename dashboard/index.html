@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMBER — Firefighter Tracking Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Map fills the entire map-area */
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">E</div>
+      <div>
+        <div class="logo-text">EMBER</div>
+        <div class="logo-sub">Firefighter Tracking System</div>
+      </div>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-label" id="statusLabel">Disconnected</span>
+    <button class="btn btn-primary" id="btnConnect" onclick="handleConnect()">Connect</button>
+    <button class="btn" id="btnMock" onclick="toggleMock()">Mock Data</button>
+  </div>
+
+  <!-- ═══════ MAIN LAYOUT ═══════ -->
+  <div class="main">
+
+    <!-- Map + Log -->
+    <div class="map-area">
+      <div class="map-container" id="mapContainer">
+        <div id="map"></div>
+      </div>
+
+      <!-- Activity log -->
+      <div class="log-panel">
+        <div class="log-header">
+          <span class="log-header-title">Activity log</span>
+          <span class="log-header-count" id="logCount">0</span>
+        </div>
+        <div class="log-scroll" id="logScroll"></div>
+      </div>
+    </div>
+
+    <!-- ═══════ SIDEBAR ═══════ -->
+    <div class="sidebar">
+      <div class="sidebar-header">Firefighter nodes</div>
+
+      <div class="node-cards" id="nodeCards">
+
+        <!-- FF1 -->
+        <div class="node-card" id="card-1">
+          <div class="node-card-header">
+            <div class="node-card-dot ff1"></div>
+            <span class="node-card-name">Firefighter 1</span>
+            <span class="node-card-status offline" id="status-1">OFFLINE</span>
+          </div>
+          <div class="node-card-body">
+            <div class="node-stat-grid">
+              <div class="node-stat">
+                <span class="node-stat-label">Latitude</span>
+                <span class="node-stat-value" id="lat-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Longitude</span>
+                <span class="node-stat-value" id="lng-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Heading</span>
+                <span class="node-stat-value" id="heading-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">GPS Fix</span>
+                <span class="node-stat-value" id="fix-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Last update</span>
+                <span class="node-stat-value" id="lastUpdate-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Battery</span>
+                <span class="node-stat-value" id="batt-1">&mdash;</span>
+                <div class="batt-bar"><div class="batt-fill" id="battFill-1" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="node-card-actions">
+            <button class="btn btn-danger btn-sm" onclick="sendAlert(1)">Send Alert</button>
+            <button class="btn btn-sm" onclick="locateNode(1)">Locate</button>
+          </div>
+        </div>
+
+        <!-- FF2 -->
+        <div class="node-card" id="card-2">
+          <div class="node-card-header">
+            <div class="node-card-dot ff2"></div>
+            <span class="node-card-name">Firefighter 2</span>
+            <span class="node-card-status offline" id="status-2">OFFLINE</span>
+          </div>
+          <div class="node-card-body">
+            <div class="node-stat-grid">
+              <div class="node-stat">
+                <span class="node-stat-label">Latitude</span>
+                <span class="node-stat-value" id="lat-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Longitude</span>
+                <span class="node-stat-value" id="lng-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Heading</span>
+                <span class="node-stat-value" id="heading-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">GPS Fix</span>
+                <span class="node-stat-value" id="fix-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Last update</span>
+                <span class="node-stat-value" id="lastUpdate-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Battery</span>
+                <span class="node-stat-value" id="batt-2">&mdash;</span>
+                <div class="batt-bar"><div class="batt-fill" id="battFill-2" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="node-card-actions">
+            <button class="btn btn-danger btn-sm" onclick="sendAlert(2)">Send Alert</button>
+            <button class="btn btn-sm" onclick="locateNode(2)">Locate</button>
+          </div>
+        </div>
+
+        <!-- System info -->
+        <div class="system-info">
+          <div class="node-stat" style="margin-bottom:8px">
+            <span class="node-stat-label">Radio</span>
+            <span class="node-stat-value">NRF24L01 CH108 250Kbps</span>
+          </div>
+          <div class="node-stat" style="margin-bottom:8px">
+            <span class="node-stat-label">Serial</span>
+            <span class="node-stat-value">115200 baud (USB)</span>
+          </div>
+          <div class="node-stat" style="margin-bottom:8px">
+            <span class="node-stat-label">Controller</span>
+            <span class="node-stat-value">Arduino Nano</span>
+          </div>
+          <div class="node-stat">
+            <span class="node-stat-label">Update rate</span>
+            <span class="node-stat-value">500ms</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SCRIPTS ═══════ -->
+  <script src="js/serial.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/mock.js"></script>
+  <script src="js/app.js"></script>
+
+  <!--
+    Google Maps API
+    ─────────────────────────────────────────────────────────
+    Replace YOUR_API_KEY below with your actual Google Maps
+    JavaScript API key. Get one free at:
+    https://console.cloud.google.com/apis/credentials
+
+    Enable "Maps JavaScript API" in the Google Cloud Console.
+    The free tier gives you $200/month of usage (~28,000 map loads).
+  -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+  </script>
+
+</body>
+</html>
