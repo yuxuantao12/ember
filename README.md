@@ -132,6 +132,13 @@ The dashboard uses the [Web Serial API](https://developer.mozilla.org/en-US/docs
 - ❌ Firefox (not supported)
 - ❌ Safari (not supported)
 
+
+## Google Maps API Key
+
+The private API key has been omitted. Please request an API key at https://console.cloud.google.com/ for map function. 
+
+
+
 ## License
 
 MIT
