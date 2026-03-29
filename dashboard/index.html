@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMBER — Firefighter Tracking Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Map fills the entire map-area */
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════ INTRO SPLASH ═══════ -->
+  <div id="introSplash">
+    <div class="intro-content">
+      <div class="intro-glow"></div>
+      <h1 class="intro-title" id="introTitle"></h1>
+      <p class="intro-subtitle" id="introSubtitle"></p>
+      <p class="intro-prompt" id="introPrompt">press enter to continue</p>
+    </div>
+  </div>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Outfit:wght@300;400&display=swap');
+
+    #introSplash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #0a0b0e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    #introSplash.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .intro-content {
+      position: relative;
+      text-align: center;
+    }
+
+    .intro-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(232,93,36,0.15) 0%, rgba(232,93,36,0.05) 40%, transparent 70%);
+      border-radius: 50%;
+      animation: glowPulse 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    }
+
+    .intro-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 76px;
+      font-weight: 700;
+      color: #e8e6e1;
+      letter-spacing: 8px;
+      position: relative;
+      min-height: 95px;
+    }
+
+    .intro-title .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 68px;
+      background: #e85d24;
+      margin-left: 4px;
+      vertical-align: text-bottom;
+      animation: cursorBlink 0.6s ease-in-out infinite;
+    }
+
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .intro-title .ember-e {
+      color: #e85d24;
+      font-style: italic;
+    }
+
+    .intro-title .dot {
+      color: #e85d24;
+    }
+
+    .intro-subtitle {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      color: #6b6a66;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 24px;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .intro-subtitle.visible {
+      opacity: 1;
+    }
+
+    .intro-prompt {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      color: #4a4a47;
+      letter-spacing: 3px;
+      text-transform: lowercase;
+      margin-top: 48px;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      animation: promptPulse 2.5s ease-in-out infinite;
+    }
+    .intro-prompt.visible {
+      opacity: 1;
+    }
+
+    @keyframes promptPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+  </style>
+
+  <script>
+    (function() {
+      const title = document.getElementById('introTitle');
+      const subtitle = document.getElementById('introSubtitle');
+      const prompt = document.getElementById('introPrompt');
+
+      const fullText = 'ember. with an e.';
+      let charIndex = 0;
+      let typingDone = false;
+      let readyToDismiss = false;
+      const cursor = '<span class="cursor"></span>';
+
+      function dismissSplash() {
+        if (!readyToDismiss) return;
+        const cursorEl = title.querySelector('.cursor');
+        if (cursorEl) cursorEl.style.display = 'none';
+        document.getElementById('introSplash').classList.add('fade-out');
+        setTimeout(() => {
+          document.getElementById('introSplash').remove();
+        }, 900);
+        document.removeEventListener('keydown', onKey);
+      }
+
+      function onKey(e) {
+        if (e.key === 'Enter') {
+          dismissSplash();
+        }
+      }
+
+      document.addEventListener('keydown', onKey);
+
+      function typeNext() {
+        if (charIndex <= fullText.length) {
+          let displayed = fullText.substring(0, charIndex);
+
+          if (charIndex === fullText.length) {
+            displayed = '<span class="ember-e">e</span>mber<span class="dot">.</span> with an <span class="ember-e">e</span><span class="dot">.</span>';
+            title.innerHTML = displayed + cursor;
+            typingDone = true;
+
+            setTimeout(() => {
+              subtitle.textContent = 'Emergency Monitor for Building Evacuation & Rescue';
+              subtitle.classList.add('visible');
+            }, 600);
+
+            setTimeout(() => {
+              prompt.classList.add('visible');
+              readyToDismiss = true;
+            }, 1400);
+
+          } else {
+            title.innerHTML = displayed + cursor;
+          }
+
+          charIndex++;
+          const nextChar = fullText[charIndex - 1];
+          const delay = nextChar === '.' ? 300 : nextChar === ' ' ? 80 : 100;
+          setTimeout(typeNext, delay);
+        }
+      }
+
+      setTimeout(typeNext, 800);
+    })();
+  </script>
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">E</div>
+      <div>
+        <div class="logo-text">EMBER</div>
+        <div class="logo-sub">Firefighter Tracking System</div>
+      </div>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-label" id="statusLabel">Disconnected</span>
+    <button class="btn btn-primary" id="btnConnect" onclick="handleConnect()">Connect</button>
+    <button class="btn" id="btnMock" onclick="toggleMock()">Mock Data</button>
+    <button class="btn" id="btnFloorPlan" onclick="document.getElementById('floorPlanInput').click()">Upload Floor Plan</button>
+    <button class="btn" id="btnRemoveOverlay" onclick="removeFloorPlanOverlay()" style="display:none">Remove Overlay</button>
+    <input type="file" id="floorPlanInput" accept="image/*" onchange="handleFloorPlanUpload(event)" style="display:none">
+  </div>
+
+  <!-- ═══════ MAIN LAYOUT ═══════ -->
+  <div class="main">
+
+    <!-- Map + Log -->
+    <div class="map-area">
+      <div class="map-container" id="mapContainer">
+        <div id="map"></div>
+      </div>
+
+      <!-- Activity log -->
+      <div class="log-panel">
+        <div class="log-header">
+          <span class="log-header-title">Activity log</span>
+          <span class="log-header-count" id="logCount">0</span>
+        </div>
+        <div class="log-scroll" id="logScroll"></div>
+      </div>
+    </div>
+
+    <!-- ═══════ SIDEBAR ═══════ -->
+    <div class="sidebar">
+      <div class="sidebar-header">Firefighter nodes</div>
+
+      <div class="node-cards" id="nodeCards">
+
+        <!-- FF1 -->
+        <div class="node-card" id="card-1">
+          <div class="node-card-header">
+            <div class="node-card-dot ff1"></div>
+            <span class="node-card-name">Firefighter 1</span>
+            <span class="node-card-status offline" id="status-1">OFFLINE</span>
+          </div>
+          <div class="node-card-body">
+            <div class="node-stat-grid">
+              <div class="node-stat">
+                <span class="node-stat-label">Latitude</span>
+                <span class="node-stat-value" id="lat-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Longitude</span>
+                <span class="node-stat-value" id="lng-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Heading</span>
+                <span class="node-stat-value" id="heading-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">GPS Fix</span>
+                <span class="node-stat-value" id="fix-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Last update</span>
+                <span class="node-stat-value" id="lastUpdate-1">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Battery</span>
+                <span class="node-stat-value" id="batt-1">&mdash;</span>
+                <div class="batt-bar"><div class="batt-fill" id="battFill-1" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="node-card-actions">
+            <button class="btn btn-danger btn-sm" onclick="sendAlert(1)">Send Alert</button>
+            <button class="btn btn-sm" onclick="locateNode(1)">Locate</button>
+          </div>
+        </div>
+
+        <!-- FF2 -->
+        <div class="node-card" id="card-2">
+          <div class="node-card-header">
+            <div class="node-card-dot ff2"></div>
+            <span class="node-card-name">Firefighter 2</span>
+            <span class="node-card-status offline" id="status-2">OFFLINE</span>
+          </div>
+          <div class="node-card-body">
+            <div class="node-stat-grid">
+              <div class="node-stat">
+                <span class="node-stat-label">Latitude</span>
+                <span class="node-stat-value" id="lat-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Longitude</span>
+                <span class="node-stat-value" id="lng-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Heading</span>
+                <span class="node-stat-value" id="heading-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">GPS Fix</span>
+                <span class="node-stat-value" id="fix-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Last update</span>
+                <span class="node-stat-value" id="lastUpdate-2">&mdash;</span>
+              </div>
+              <div class="node-stat">
+                <span class="node-stat-label">Battery</span>
+                <span class="node-stat-value" id="batt-2">&mdash;</span>
+                <div class="batt-bar"><div class="batt-fill" id="battFill-2" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="node-card-actions">
+            <button class="btn btn-danger btn-sm" onclick="sendAlert(2)">Send Alert</button>
+            <button class="btn btn-sm" onclick="locateNode(2)">Locate</button>
+          </div>
+        </div>
+
+        <!-- System info -->
+        <div class="system-info">
+          <div class="node-stat" style="margin-bottom:8px">
+            <span class="node-stat-label">Radio</span>
+            <span class="node-stat-value">NRF24L01 CH108 250Kbps</span>
+          </div>
+          <div class="node-stat" style="margin-bottom:8px">
+            <span class="node-stat-label">Serial</span>
+            <span class="node-stat-value">115200 baud (USB)</span>
+          </div>
+          <div class="node-stat" style="margin-bottom:8px">
+            <span class="node-stat-label">Controller</span>
+            <span class="node-stat-value">Arduino Nano</span>
+          </div>
+          <div class="node-stat">
+            <span class="node-stat-label">Update rate</span>
+            <span class="node-stat-value">500ms</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SCRIPTS ═══════ -->
+  <script src="js/serial.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/mock.js"></script>
+  <script src="js/app.js"></script>
+
+  <!--
+    Google Maps API
+    ─────────────────────────────────────────────────────────
+    Replace YOUR_API_KEY below with your actual Google Maps
+    JavaScript API key. Get one free at:
+    https://console.cloud.google.com/apis/credentials
+
+    Enable "Maps JavaScript API" in the Google Cloud Console.
+    The free tier gives you $200/month of usage (~28,000 map loads).
+  -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDncRQj9klmp0RLc7xhvJOD0zGqI4P-rTY&callback=initMap">
+  </script>
+
+</body>
+</html>
